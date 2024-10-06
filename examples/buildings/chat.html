@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    /*justify-content: space-between;*/
+    width: 600px;
+    height: 100%;
+    /* background-color: white; */
+    border-radius: 10px;
+    /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); */
+    overflow: hidden;
+}
+
+.chat-window {
+    /*flex-grow: 1;*/
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    max-width: 80%;
+    padding: 12px 18px;
+    margin-bottom: 15px;
+    border-radius: 20px;
+    font-size: 16px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.user-message {
+    align-self: flex-end;
+    background-color: #0084ff;
+    color: white;
+}
+
+.assistant-message {
+    align-self: flex-start;
+    background-color: #e5e5ea;
+    color: #333;
+}
+
+.chat-input-container {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-top: 1px solid #e5e5e5;
+    background-color: #fafafa;
+}
+
+#chat-input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    height: 100px;
+    font-size: 16px;
+    outline: none;
+    resize: none;
+}
+
+#send-btn {
+    margin-left: 15px;
+    padding: 10px 20px;
+    background-color: #0084ff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s ease;
+}
+
+#send-btn:hover {
+    background-color: #006bbf;
+}
+
+#chat-window::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-window::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+  </style>
+  </head>
+  <body>
+
+    <div class="chat-container">
+        <div class="chat-window" id="chat-window">
+            <!-- Chat messages will appear here -->
+            <!-- <div class="message user-message"> -->
+                <!-- Hello, how can I assist you today? -->
+            <!-- </div> -->
+            <div class="message assistant-message">
+                Hello, how can I assist you today?
+            </div>
+                <!-- <img src="loading-discord-grey.gif" style="width: 40px;"/> -->
+        </div>
+
+        <div class="chat-input-container">
+            <textarea id="chat-input" rows="1" placeholder="Send a message..."></textarea>
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+  </body>
+  <script>
+    const chatWindow = document.getElementById('chat-window');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-btn');
+
+    // Function to append user and assistant messages to the chat window
+    function appendMessage(content, className) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', className);
+        messageDiv.textContent = content;
+        chatWindow.appendChild(messageDiv);
+
+        // Scroll to the bottom of the chat window
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    function appendLoading(className) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', className);
+        messageDiv.id = "loadingMsg"
+        // messageDiv.textContent = content;
+        chatWindow.appendChild(messageDiv);
+        const img = document.createElement("img")
+        img.src="loading-discord-grey.gif"
+        img.style.width = "40px"
+        messageDiv.appendChild(img)
+
+        // Scroll to the bottom of the chat window
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    function appendFollowButton(){
+        const btn = document.createElement('button')
+        btn.classList.add("send-btn")
+        btn.textContent = "Show results"
+        chatWindow.appendChild(btn)
+        btn.style.height = "40px"
+        btn.onclick = () => {
+            window.parent.document.getElementById("page_chat").style.display = "none";
+            window.parent.document.getElementById("page_params").style.display = "";
+            crSlc();
+        }
+    }
+
+    // Handle sending user message and simulate assistant response
+    sendButton.addEventListener('click', function() {
+        const userMessage = chatInput.value.trim();
+
+        if (userMessage === '') return;  // Do nothing if input is empty
+
+        // Append the user message
+        appendMessage(userMessage, 'user-message');
+        appendLoading('assistant-message');
+        // Clear the input field
+        chatInput.value = '';
+        // Simulate assistant typing delay (e.g., 1.5 seconds)
+        setTimeout(() => {
+            document.getElementById("loadingMsg").style.visibility = "collapse"
+            const assistantMessage = generateResponse(userMessage);
+            appendMessage(assistantMessage, 'assistant-message');
+            appendFollowButton()
+        }, 3000);
+    });
+
+    // Simple function to generate a response based on user input
+    function generateResponse(userMessage) {
+        /////
+        // Can you help me find dimensions of toilet pipes on Level 2 in tenent area?
+        /////
+        // You can modify this to make it more dynamic
+        return "Of course! I can definitely show you the cold water pipes on level 2 in the tenant space. I'll guide you step by step to get exactly what you're looking for. Let me pull up the layout for you and highlight the pipe locations so you can easily see where everything is. Let's get started!";
+    }
+</script>
+
+</html>

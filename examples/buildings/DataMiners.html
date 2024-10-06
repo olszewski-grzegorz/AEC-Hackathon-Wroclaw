@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IFC Data Miners</title>
+    <link href="../css/pageStyle.css" rel="stylesheet" />
+    <style>
+      /* ----------------------------------------------------------------------------------------------------------*/
+      /* NavCubePlugin */
+      /* ----------------------------------------------------------------------------------------------------------*/
+
+      #myNavCubeCanvas {
+        position: absolute;
+        width: 250px;
+        height: 250px;
+        bottom: 50px;
+        right: 10px;
+        z-index: 200000;
+      }
+
+      /* ----------------------------------------------------------------------------------------------------------*/
+      /* TreeViewPlugin */
+      /* ----------------------------------------------------------------------------------------------------------*/
+
+      #treeViewContainer {
+        pointer-events: all;
+        height: 100%;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        position: absolute;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: black;
+        top: 80px;
+        z-index: 200000;
+        float: left;
+        left: 0;
+        padding-left: 10px;
+        font-family: "Roboto", sans-serif;
+        font-size: 15px;
+        user-select: none;
+        -ms-user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        width: 175px;
+      }
+
+      #treeViewContainer ul {
+        list-style: none;
+        padding-left: 1.75em;
+        pointer-events: none;
+      }
+
+      #treeViewContainer ul li {
+        position: relative;
+        width: 350px;
+        pointer-events: none;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        vertical-align: middle;
+      }
+
+      #treeViewContainer ul li a {
+        background-color: #eee;
+        border-radius: 50%;
+        color: #000;
+        display: inline-block;
+        height: 1.5em;
+        left: -1.5em;
+        position: absolute;
+        text-align: center;
+        text-decoration: none;
+        width: 1.5em;
+        pointer-events: all;
+      }
+
+      #treeViewContainer ul li a.plus {
+        background-color: #ded;
+        pointer-events: all;
+      }
+
+      #treeViewContainer ul li a.minus {
+        background-color: #eee;
+        pointer-events: all;
+      }
+
+      #treeViewContainer ul li a:active {
+        top: 1px;
+        pointer-events: all;
+      }
+
+      #treeViewContainer ul li span:hover {
+        color: white;
+        cursor: pointer;
+        background: black;
+        padding-left: 2px;
+        pointer-events: all;
+      }
+
+      #treeViewContainer ul li span {
+        display: inline-block;
+        width: calc(100% - 50px);
+        padding-left: 2px;
+        pointer-events: all;
+        height: 23px;
+      }
+
+      #treeViewContainer .highlighted-node {
+        /* Appearance of node highlighted with TreeViewPlugin#showNode() */
+        border: black solid 1px;
+        background: yellow;
+        color: black;
+        padding-left: 1px;
+        padding-right: 5px;
+        pointer-events: all;
+      }
+
+      
+      body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }   
+       .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 90%;
+            /* height: 70%; */
+            padding: 10px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .container input, .container select, .container textarea, .container button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .container button {
+            background-color: #068838;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .container button:hover {
+            background-color: #45a049;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+        }
+        .slideout-sidebar{
+            padding-top: 20px;
+            /* padding-right: 20px; */
+            padding-left: 20px;
+            padding-bottom: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: 0px solid #ccc;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"></script>
+  </head>
+  <body>
+    <input type="checkbox" id="info-button"/>
+    <label for="info-button" class="info-button"><i class="far fa-3x fa-question-circle"></i></label>
+    <canvas id="myCanvas"></canvas>
+    <canvas id="myNavCubeCanvas"></canvas> 
+    <div id="treeViewContainer"></div>
+    <div class="slideout-sidebar">
+      <div id="closeChatBtn"><span style="text-decoration: underline;">[X] Close</span></div>
+        <div id="page_chat">
+            <iframe id="chatIframe" src="chat.html" title="Chat Interface"></iframe>
+        </div>
+        <div id="page_params" style="display: none;">
+            
+        <div class="container">
+            <label>Trade context and user role:</label>
+            <select>
+                <option selected>Trade 1: Plumber</option>
+                <option>Trade 2: Electrician</option>
+                <option>Trade 3: Mechanical designer</option>
+            </select>
+            <label>Building model</label>
+            <select>
+                <option>Main building</option>
+                <option>Garage building</option>
+            </select>
+            <label>Level</label>
+            <select id="levelSelectorDD">
+                <!-- <option selected disabled>Select location</option> -->
+            </select>
+            <label>Grid lines</label>
+            <input placeholder="GL proximity"></input>
+            <label>Building Space</label>
+            <select>
+                <option>Tenant spaces</option>
+                <option>Circulation: corridors</option>
+                <option>Office spaces: AO1</option>
+                <option>Office spaces: AO2</option>
+            </select>
+            <label>Use designed / built reference</label>
+            <select>
+                <option>Built: Structural Concrete Walls</option>
+                <option>Designed: Interior demising walls</option>
+            </select>
+            <label>Objects to inspect:</label>
+            <textarea placeholder="Enter description of the objects you would like to inspect" rows="4"></textarea>
+            <button type="submit">Extract instructions</button>
+        </div>
+        <div class="container">
+            <label>View options</label>
+            <div style="display: flex; align-items: center; font-family: Arial, sans-serif; margin-bottom: 5px">
+                <label class="toggle-switch" style="margin-top: 17px; margin-right: 15px;">
+                    <input type="checkbox" id="liveDimToggle">
+                    <span class="slider"></span>
+                </label>
+                <div class="status" id="status">Live dimensions OFF</div>
+            </div>
+            <!-- <button id="DimXAddBtn">Toggle plane X+</button> -->
+            <button id="SetTopViewBtn">Set top view</button>
+            <button id="SetSideXViewBtn">Set side view X</button>
+            <button id="SetSideYViewBtn">Set side view Y</button>
+            <button id="SetOrthoViewBtn">Set ortho view</button>
+        </div>
+            <!-- <button id="DimZRemBtn">Toggle plane Z-</button> -->
+        </div>
+    </div>
+  </body>
+
+  <script type="module">
+    import {
+      Viewer,
+      Mesh,
+      PhongMaterial,
+      ReadableGeometry,
+      buildSphereGeometry,
+      XKTLoaderPlugin,
+      NavCubePlugin,
+      TreeViewPlugin,
+      SectionPlane,
+      FastNavPlugin,
+      DistanceMeasurementsPlugin,
+      AnnotationsPlugin,
+    } from "../../dist/xeokit-sdk.es.js";
+    import { overlappingPick } from "../libs/overlappingPick.js";
+
+    const viewer = new Viewer({
+      canvasId: "myCanvas",
+      transparent: true,
+      backgroundColor: [1, 1, 1],
+      backgroundColorFromAmbientLight: false,
+      saoEnabled: true,
+      pbrEnabled: false,
+      colorTextureEnabled: true,
+    });
+
+   // Selection enabled switcher logic
+   const toggle = document.getElementById("liveDimToggle");
+    const statusText = document.getElementById("status");
+    toggle.addEventListener("change", function() {
+        if (toggle.checked) {
+            statusText.textContent = "Live dimensions ON";
+            // enable live dimensions here
+        } else {
+            statusText.textContent = "Live dimensions OFF";
+            // disable live dimensions here
+        }
+    });
+    // Methods for preparing custom views
+        const setTopView = () => {
+        const eye = viewer.scene.camera.eye;
+        viewer.scene.camera.look = [eye[0], eye[1]-1, eye[2]]   
+        viewer.scene.camera.up = [0,0,-1]
+        viewer.cameraFlight.jumpTo(sceneModel);
+    }    
+    const setSideViewX = () => {
+        const eye = viewer.scene.camera.eye;
+        viewer.scene.camera.look = [eye[0]-1, eye[1], eye[2]]   
+        viewer.scene.camera.up = [0,1,0]
+        viewer.cameraFlight.jumpTo(sceneModel);
+    }    
+    const setSideViewY = () => {
+        const eye = viewer.scene.camera.eye;
+        viewer.scene.camera.look = [eye[0], eye[1], eye[2]-1]   
+        viewer.scene.camera.up = [0,1,0]
+        viewer.cameraFlight.jumpTo(sceneModel);
+    }    
+    const setOrthoView = () => {
+        const eye = viewer.scene.camera.eye;
+        viewer.scene.camera.look = [eye[0]-1, eye[1]-1, eye[2]-1]   
+        viewer.scene.camera.up = [0,1,0]
+        viewer.cameraFlight.jumpTo(sceneModel);
+    }
+    viewer.scene.camera.eye = [14.915582703146043, 14.396781491179095, 5.431098754133695];
+    viewer.scene.camera.look = [6.599999999999998, 8.34099990051474, -4.159999575600315];
+    viewer.scene.camera.up = [-0.2820584034861215, 0.9025563895259413, -0.3253229483893775];
+    viewer.camera.project.fov = 45;
+    viewer.camera.projection = "ortho";
+
+    // Pages
+    const chatPage = document.getElementById("page_chat");
+    const paramsPage = document.getElementById("page_params");
+    // Closing chat page
+    const closeChatBtn = document.getElementById("closeChatBtn");
+    closeChatBtn.onclick = () => {
+        chatPage.style.display = "none";
+        paramsPage.style.display = "";
+        closeChatBtn.style.display = "none";
+    }
+
+
+    new NavCubePlugin(viewer, {
+      canvasId: "myNavCubeCanvas",
+      visible: false,
+      size: 250,
+      alignment: "bottomLeft",
+      bottomMargin: 100,
+      leftMargin: 10,
+    });
+
+    new TreeViewPlugin(viewer, {
+      containerElement: document.getElementById("treeViewContainer"),
+      hierarchy: "storeys",
+      autoExpandDepth: 1,
+    });
+
+    new FastNavPlugin(viewer, {
+      hideEdges: true,
+      hideSAO: true,
+      hideColorTexture: false,
+      hidePBR: false,
+      hideTransparentObjects: false,
+      scaleCanvasResolution: false,
+      scaleCanvasResolutionFactor: 0.5,
+      delayBeforeRestore: true,
+      delayBeforeRestoreSeconds: 0.4,
+    });
+
+    const distanceMeasurementsPlugin = new DistanceMeasurementsPlugin(viewer, {
+      defaultAxisVisible: false, // <<------------ Hide axis wires
+    });
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+    var toggleDimFunction = false;
+
+    const sceneModel = xktLoader.load({
+      id: "myModel",
+      //src: "../../assets/models/xkt/structural.ifc.xkt",
+      manifestSrc:
+        "../../assets/models/xkt/v10/split/rme_advanced_sample_project/ifcCXConverterPipeline1/model.xkt.manifest.json",
+      saoEnabled: true,
+      edges: true,
+      dtxEnabled: true,
+    });
+
+    sceneModel.on("loaded", () => {
+      viewer.cameraFlight.jumpTo(sceneModel);
+    });
+
+// Chat functionality
+  // Store state of used section
+  var sections = []
+    // Manage disabling sections
+    const clearSections = () =>  {
+        for(const sec in sections){
+            sections[sec].destroy();
+        }
+        sections.length = 0
+    }
+    function createSliceLowest(z1)
+    { 
+        clearSections()
+        const spZ1 = new SectionPlane(viewer.scene, {
+            pos: [0, z1+2, 15],
+            dir: [0.0, -1.0, 0.0],
+            active: true
+        })
+        return [spZ1]
+        // return sectionPlanes
+    }    
+    function createSliceHighest(z1)
+    { 
+        clearSections()
+        const spZ2 = new SectionPlane(viewer.scene, {
+            pos: [0, z1-1, 15],
+            dir: [0.0, 1.0, 0.0],
+            active: true
+        })
+        return [spZ2]
+        // return sectionPlanes
+    }
+    function createSlice(z1, z2){
+        clearSections()
+        const spZ1 = new SectionPlane(viewer.scene, {
+        pos: [0, z2, 15],
+        dir: [0.0, -1.0, 0.0],
+        active: true
+    })
+        const spZ2 = new SectionPlane(viewer.scene, {
+            pos: [0, z1, 15],
+            dir: [0.0, 1.0, 0.0],
+            active: true
+        })
+        return [spZ1, spZ2]
+        // return sectionPlanes
+    }
+    function getElevFromLevel(level){ //m
+        return parseFloat(level.attributes.elevation)/1000
+    }
+    // define array for level IFC metaObjects
+    var levelElev = [];
+    var levels = [];
+    //
+    document.getElementById("chatIframe").contentWindow.crSlc = () => {
+        //createSlice(3.3, 5.8);
+        // uncomment to enable 
+        // let sectionPlanes = createSlice(3.8, 5.3)
+    }
+    
+    // Setting custom views using buttons
+    const setTopViewBtn = document.getElementById("SetTopViewBtn")
+    setTopViewBtn.onclick = () => {
+        setTopView();
+    }
+    const setSideXViewBtn = document.getElementById("SetSideXViewBtn")
+    setSideXViewBtn.onclick = () => {
+        setSideViewX();
+    }
+    const setSideYViewBtn = document.getElementById("SetSideYViewBtn")
+    setSideYViewBtn.onclick = () => {
+        setSideViewY();
+    }
+    const setOrthoViewBtn = document.getElementById("SetOrthoViewBtn")
+    setOrthoViewBtn.onclick = () => {
+        setOrthoView();
+    }
+    // Changing selection level dropdown
+    // Generating sliced views for selected levels
+    const levelDropdown = document.getElementById("levelSelectorDD")
+    levelDropdown.onchange = (e) => {
+
+        var selLevel = parseFloat(e.target.value) //elevation
+        var selIndex = e.target.selectedIndex
+
+        const options = Array.from(e.target.options).map(option => option.value);
+        if(e.target.selectedIndex >= options.length-1){
+            sections = createSliceHighest(selLevel)
+        } else if(e.target.selectedIndex == 0){
+            sections = createSliceLowest(selLevel)
+        }else{
+            sections = createSlice(selLevel-0.5, options[selIndex+1] - 1.5);
+        }
+    }
+    // var update = function () {
+    //         const metrics = viewer.scene.metrics;
+    //         metrics.scale = 1.0;
+    //         metrics.units = "meters";
+    //         requestAnimationFrame(update);
+    //     };
+    function extractMetaObjects(viewer){
+        const metaModel = viewer.metaScene.metaModels["myModel"];       // MetaModel with ID "myModel"
+        const objectArr = metaModel.metaObjects;
+        return objectArr; 
+    }
+    //     update();
+    const t0 = performance.now();
+    sceneModel.on("loaded", function () {
+        const t1 = performance.now();
+        
+        const objectArr = extractMetaObjects(viewer);
+        var id;
+        const levelNames = [];
+            for(const obj in objectArr)
+            {
+                if(objectArr[obj].type == 'IfcBuildingStorey')
+                {
+                    levels.push(objectArr[obj])
+                    // levelElev.push(objectArr[obj])
+                    levelElev.push(parseFloat(objectArr[obj].attributes.elevation)/1000) // units: mm -> m
+                    //console.log(objectArr[obj]);
+                    // levelNames.push(objectArr[obj].name)
+                    id = objectArr[obj].id;
+                }
+            }
+            // console.log(levelElev)
+            for(const lev in levels){
+                const levItem = levels[lev];
+                // console.log(levItem)
+                const selectOption = document.createElement("option");
+                selectOption.value = getElevFromLevel(levItem)
+                selectOption.text = levItem.name
+
+                levelDropdown.appendChild(selectOption)
+            }
+
+            levelDropdown.selectedIndex = 1;
+    });
+
+
+
+
+
+
+
+
+
+
+
+// Dimensions
+
+    const directions = [
+      { dir: [1, 0, 0], type: "pos_X" }, // Positive X-axis
+      { dir: [-1, 0, 0], type: "neg_X" }, // Negative X-axis
+      { dir: [0, 0, 1], type: "pos_Z" }, // Positive Z-axis
+      { dir: [0, 0, -1], type: "neg_Z" }, // Negative Z-axis
+    ];
+
+    function mid(x1, x2) {
+      return (x1 + x2) / 2;
+    }
+
+    function halfDistance(x1, x2) {
+      return Math.abs(x1 - x2) / 2.0;
+    }
+
+    function distance(p1, p2) { // Float32Array
+      var x = p1[0] - p2[0];
+      var y =  p1[1] - p2[1];
+      var z =  p1[2] - p2[2];
+
+      return Math.sqrt( x*x + y*y +z*z );
+    }
+
+    function resetColors() {
+      entitiesWithColors.forEach((e) => {
+        var entity = viewer.scene.objects[e.entity.id];
+        //entity.colorize = e.color;
+      });
+
+      entitiesWithColors = [];
+    }
+
+    function resetDimensions() {
+      if (previousDimIds.length == 0) {
+        return;
+      }
+
+      previousDimIds.forEach((id) => {
+        var prevDim = viewer.scene.components[id];
+        if (prevDim) {
+          prevDim.destroy();
+        }
+      });
+      previousDimIds = [];
+    }
+
+    var excludedTypes = ["IfcFlowTerminal", "IfcFlowSegment", "IfcFlowFitting"];
+    function pickValidEntity(rayOrigin, dir) {
+      var foundObject = overlappingPick(viewer.scene, {
+        origin: rayOrigin,
+        direction: dir,
+      });
+
+      if (foundObject === null) {
+        return;
+      }
+
+      var metaObject = viewer.metaScene.metaObjects[foundObject.entity.id];
+      if (excludedTypes.includes(metaObject.type)) {
+        return pickValidEntity(rayOrigin, dir);
+      }
+
+      return foundObject;
+    }
+
+    var previousDimIds = [];
+    var entitiesWithColors = [];
+
+    viewer.cameraControl.on("rightClick", (event) => {
+      previousDimIds = [];
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        distanceMeasurementsPlugin.clear();
+      } else if (event.key === "m") {
+        toggleDimFunction = !toggleDimFunction;
+      }
+    });
+
+    viewer.cameraControl.on("hoverEnter", (e) => {
+      const entity = e.entity;
+      resetColors();
+      resetDimensions();
+
+      if (!toggleDimFunction) {
+        return;
+      }
+
+      if (entity) {
+        var midX = (entity._aabb[0] + entity._aabb[3]) / 2.0;
+        var midY = (entity._aabb[1] + entity._aabb[4]) / 2.0;
+        var midZ = (entity._aabb[2] + entity._aabb[5]) / 2.0;
+
+        var rayOrigin = new Float32Array([midX, midY, midZ]);
+        for (let i = 0; i < directions.length; i++) {
+          var foundObject = pickValidEntity(rayOrigin, directions[i].dir);
+
+          if (foundObject && foundObject.entity) {
+            entitiesWithColors.push({
+              entity: foundObject.entity,
+              color: foundObject.entity.colorize.slice(),
+            });
+
+            //foundObject.entity.colorize = [0.7, 0.2, 0.4];
+
+            var midFoundX = mid(
+              foundObject.entity._aabb[0],
+              foundObject.entity._aabb[3]
+            );
+            var midFoundY = mid(
+              foundObject.entity._aabb[1],
+              foundObject.entity._aabb[4]
+            );
+            var midFoundZ = mid(
+              foundObject.entity._aabb[2],
+              foundObject.entity._aabb[5]
+            );
+
+            var dimX = midX;
+            var dimZ = midZ;
+            if (directions[i].type.endsWith("_X")) {
+              midFoundZ = midZ;
+              if (directions[i].type.startsWith("pos")) {
+                dimX = dimX + halfDistance(entity._aabb[0], entity._aabb[3]);
+                midFoundX =
+                  midFoundX -
+                  halfDistance(
+                    foundObject.entity._aabb[0],
+                    foundObject.entity._aabb[3]
+                  );
+              } else {
+                dimX = dimX - halfDistance(entity._aabb[0], entity._aabb[3]);
+                midFoundX =
+                  midFoundX +
+                  halfDistance(
+                    foundObject.entity._aabb[0],
+                    foundObject.entity._aabb[3]
+                  );
+              }
+            } else {
+              midFoundX = midX;
+              if (directions[i].type.startsWith("pos")) {
+                dimZ = dimZ + halfDistance(entity._aabb[2], entity._aabb[5]);
+                midFoundZ =
+                  midFoundZ -
+                  halfDistance(
+                    foundObject.entity._aabb[2],
+                    foundObject.entity._aabb[5]
+                  );
+              } else {
+                dimZ = dimZ - halfDistance(entity._aabb[2], entity._aabb[5]);
+                midFoundZ =
+                  midFoundZ +
+                  halfDistance(
+                    foundObject.entity._aabb[2],
+                    foundObject.entity._aabb[5]
+                  );
+              }
+            }
+
+            var dimId = "measurement_" + foundObject.entity.id + entity.id;
+
+            if (viewer.scene.components[dimId]) {
+              continue;
+            }
+
+            var dist = distance([dimX, midY, dimZ], [midFoundX, midY, midFoundZ]);
+            if (dist <0.05){
+              continue;
+            }
+            previousDimIds.push(dimId);
+            const myMeasurement1 = distanceMeasurementsPlugin.createMeasurement(
+              {
+                id: dimId,
+                origin: {
+                  entity: viewer.scene.objects[entity.id],
+                  worldPos: [dimX, midY, dimZ],
+                },
+                target: {
+                  entity: viewer.scene.objects[foundObject.entity.id],
+                  worldPos: [midFoundX, midY, midFoundZ],
+                },
+                visible: true,
+                wireVisible: true,
+              }
+            );
+          }
+        }
+      }
+    });
+
+    /*
+    viewer.cameraControl.on("hoverOut", (e) => {
+      resetColors();
+      resetDimensions();
+
+      if (!toggleDimFunction) {
+        return;
+      }
+    });
+*/
+  </script>
+</html>
